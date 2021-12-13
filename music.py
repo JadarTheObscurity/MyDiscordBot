@@ -52,23 +52,18 @@ class YTDLSource(discord.PCMVolumeTransformer):
             yt_queue += data['entries']
         else :
             yt_queue += data
-            
         filename = data['url'] if stream else ytdl.prepare_filename(data)
-        
         return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
-    
 
 
 class Music(commands.Cog):
     def __init__(self, bot):
-        
         self.bot = bot
         self.voice_channel = None
         self.voice_client = None
         self.yt_queue = []
         self.is_checking = False
         self.ctx = None
-        
     async def check_playing_status(self):
         await self.bot.wait_until_ready()
         self.is_checking = True
@@ -94,7 +89,6 @@ class Music(commands.Cog):
             await ctx.send("You are not connected to a voice channel.")
             raise commands.CommandError("Author not connected to a voice channel.")
             return
-        
         if ctx.voice_client is not None:
             return await ctx.voice_client.move_to(self.voice_channel)
 
@@ -106,16 +100,6 @@ class Music(commands.Cog):
     @commands.command()
     async def play(self, ctx, *, url):
         """Play song"""
-
-        if "我很好騙" in url:
-            await ctx.send("你媽才很好騙")
-            return
-
-        if ctx.message.author.id == 786590754301935656 and random.random() > 0.5:
-            await ctx.send("我只是一顆屎(搖頭晃腦")
-            return
-        
-        
         data = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
         if 'entries' in data:
             self.yt_queue += data['entries']
@@ -129,7 +113,6 @@ class Music(commands.Cog):
         self.ctx = ctx
         if not self.is_checking:
             await self.check_playing_status()
-            
     @commands.command()
     async def next(self, ctx):
         """Next song"""
@@ -138,7 +121,6 @@ class Music(commands.Cog):
         data =  await self.next_song()
         if data is None:
             return
-    
     @commands.command()
     async def clear(self, ctx):
         """Clear queue"""
@@ -151,9 +133,7 @@ class Music(commands.Cog):
             return None
         data = self.yt_queue.pop(0)
         filename = data['url'] if True else ytdl.prepare_filename(data)
-        
         player =  discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(filename, **ffmpeg_options))
-         
         self.voice_client.play(player, after=lambda e: print(f'Player error: {e}') if e else None)
         await self.ctx.send(f"Now playing : {data.get('title')}")
         return data
@@ -216,10 +196,8 @@ class Music(commands.Cog):
     async def check(self, ctx):
         print(f"Type of voice client : {type(self.voice_client)}")
         print(f"Type of voice channel : {type(self.voice_channel)}")
-        
     async def not_playing(self):
         return not self.voice_client.is_playing() and not self.voice_client.is_paused()
-    
     @play.before_invoke
     @next.before_invoke
     @clear.before_invoke
@@ -228,18 +206,14 @@ class Music(commands.Cog):
     @pause.before_invoke
     @resume.before_invoke
     async def ensure_voice(self, ctx):
-        
         if ctx.author.voice:
             self.voice_channel = ctx.author.voice.channel
         else:
             raise commands.CommandError("Author not connected to a voice channel.")
-        
         if ctx.voice_client is None:
             await self.voice_channel.connect()
-            
         self.voice_client = ctx.voice_client
 
-        
 def setup(bot):
     bot.add_cog(Music(bot))
 
